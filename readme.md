@@ -239,3 +239,11 @@ transaction.commit();
     ...
 }
 
+
+#### Adding items to the Action Bar
+
+ 你的fragments 可以给Activity的Options Menu 提供菜单项，通过实现onCreateOptionsMenu(),为了这个方法可以收到回调，在onCreate(）的时候必须调用setHasOptionsMenu(),来表明这个Fragment会添加items 到 Options Menu（否则，Fragment不会收到调用到OnCreateOptionsMenu()）.
+
+任何你从fragment添加到Options Menu的item将会被追加到已经存在的菜单项后面，当一个菜单项被点击后，fragment会收到回调到OnOptionsItemSelected().
+
+你也可以在fragment布局里注册一个view来提供一个上下文菜单通过调用registerForContextMenu(),当用户打开上下文菜单，fragment将会收到一个调用onCreateContextMenu().当用户选择一个item，fragment收到一个调用 onContextItemSelected(),
