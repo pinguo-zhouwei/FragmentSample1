@@ -92,9 +92,9 @@ inflate()方法有三个参数:
 
 
 文档翻译日期:2014.9.18
-===
+=====
 
-###Or, programmatically add the fragment to an existing ViewGroup.(或者程序代码中添加fragment到已存在的ViewGroup)
+####Or, programmatically add the fragment to an existing ViewGroup.(或者程序代码中添加fragment到已存在的ViewGroup)
 
 在你activity运行的任何时间，你都可以添加fragments到你的activity布局。你需要简单的指定一个ViewGroup来放你的fragment.
 
@@ -132,4 +132,4 @@ add（）方法的第一个参数是这个fragment会放在哪的ViewGroup,通�
 
 >. 3 为回退栈的变化注册一个监听器，用 addOnBackStackChangeListener().
 
- 正如前面章节所述，你可以用FragmentManager 打开一个FragmentTransaction,它允许你操作事务，如添加和移除fragment.
+ 正如前面章节所述，你可以用FragmentManager 打开一个FragmentTransaction,它允许你操作事务，如:添加和移除fragment.
