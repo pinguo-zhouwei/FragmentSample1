@@ -178,3 +178,64 @@ transaction.commit();
  调用commit（）后不会立即执行事务，它按进度运行在Activity的UI线程里，直到这个线程有能力区执行它。但是，如果有需要，你可以从UI线程调用executePendingTransactions()来立即执行事务的提交。这样做通常是不必要的，除非你的事务是其他线程工作所依赖的。
 
 > Caution（警告）: 你可以用一个commit（）来提交一个事务仅优先于Activity保存它的状态(当用户离开Activity的时候)。如果你尝试在那个点之后提交，将会抛出一个异常，这是因为这个状态在提交之后可能会丢失，如果Activity需要重新保存，在这种情况下——丢失提交的情况下正常执行，用commitAllowingStareLoss().
+
+
+####Communicating with the Activity(与Activity交互)
+
+尽管一个fragment独立与Activity作为一个Object被实现，并且可以用于多个Activity里，但是，一个给定的Fragment实例直接tied（系）于Activity之上。也就是包含它。
+
+特别地，fragment可以访问Activity实例用getActivity(),并且很容易执行任务，如:在Activity布局中找一个view.
+
+> View listView = getActivity().findViewById(R.id.list);
+
+同样的，你的Activity可以调用fragment里的方法，通过从FragmentManager返回一个引用，用findFragmentById()或findFragmentByTag(),例如:
+
+> ExampleFragment fragment = (ExampleFragment) getFragmentManager().findFragmentById(R.id.example_fragment);
+
+#####Creating event callbacks to the activity(为Activity创建回调事件)
+
+在一些情况下，你可能需要fragment分享一些回调事件给Activity,一个好的实现方式就是在fragment里定义一个回调接口，并且需要宿主Activity实现它。当activity从接口收到一个回调的时候，它可以分享信息给其他的fragment.
+
+例如；如果一个应用有两个fragment在一个Activity中，一个显示articles列表(Fragment A)，另一个输出一个article(Fragment B),然后，fragment A 必须告诉Activity 什么时候一个list的item被选中，以至于它可以告诉Fragment B 来显示article,在这种情况下，OnArticleSelectedListener 接口在fragment A 中被定义:
+
+> public static class FragmentA extends ListFragment {
+    ...
+    // Container Activity must implement this interface
+    public interface OnArticleSelectedListener {
+        public void onArticleSelected(Uri articleUri);
+    }
+    ...
+}
+
+然后，Fragment宿主的Activity 需要实现这个接口，并且重写fragment A 的onArticleSelected()方法来通知fragment B ，为了保证宿主Activity实现这个接口，Fragment A的onAttach()回调方法实例化一个OnArticleSelectedListener实例通过强制转换 Activity.
+
+> public static class FragmentA extends ListFragment {
+    OnArticleSelectedListener mListener;
+    ...
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        try {
+            mListener = (OnArticleSelectedListener) activity;
+        } catch (ClassCastException e) {
+            throw new ClassCastException(activity.toString() + " must implement OnArticleSelectedListener");
+        }
+    }
+    ...
+}
+
+如果这个Activity没有实现这个接口，这时这个fragment 抛出一个类型转换异常(ClassCastException),如果实现了接口，the mListener 变量持有一个 OnArticleSelectedListener的引用。因此，fragment A 可以分享事件给Activity通过调用定义在OnArticleSelectedListener接口里面的方法。例如,如果fragment A 是一个可扩张的ListFragment，每次用户点击一个item项，系统调用fragment 中 onListItemClick（） 方法，然后这个方法调用OnArticleSelected（）方法分享事件给Activity.
+
+> public static class FragmentA extends ListFragment {
+    OnArticleSelectedListener mListener;
+    ...
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        // Append the clicked item's row ID with the content provider Uri
+        Uri noteUri = ContentUris.withAppendedId(ArticleColumns.CONTENT_URI, id);
+        // Send the event and Uri to the host activity
+        mListener.onArticleSelected(noteUri);
+    }
+    ...
+}
+
