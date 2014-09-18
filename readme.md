@@ -41,3 +41,45 @@ fragment结合不同的屏幕尺寸。当你设计的应用同时支持平板和
 Fragment类的编写和Activity的类很相似，它包含的回调方法类似与 Activity.列如：
 onCreate(),onStart(), onPause().and onStop()，事实上，如果你要改造一个现有的Android 应用使用 fragment,你只需要简单的将Activity里回调方法的代码移动到Fragment各自的回调方法中就行了。
 
+一般地，你至少继承以下生命周期的方法:
+>.onCreate()
+ 当创建fragment的时候系统调用这个方法。在你的实现中，你应该初始化一些你想要在fragment paused或 stopped 时保持的基本组件。然后 resumed.
+>.      OnCreateView()
+ 当fragment第一次画用户界面的时候系统调用这个方法。为了给你的fragment画UI界面，你必须从这个方法返回一个view,这就是你fragment 布局的根，如果你的fragment不许要提供UI,你可以返回一个null.
+ >.OnPause()
+系统调用这个方法表明用户将离开fragment(尽管经常不是指fragment要被销毁了），这就是你经常需要提交任何修改的地方。应该被保存在当前用户session之上。
+
+![alt text][id]
+
+[id]:app/iamge/fragment_lifecycle.png "Title"
+
+所有的生命周期回调方法在章节 Handing the Fragment Lifecycle 中详细讨论。
+
+这里有一些你想直接继承的子类，代替基类Fragment：
+>.DialogFragment：
+      显示一个悬浮的对话框(dialog)，用这个类来创建一个dialog是一个非传统的创建dialog帮助方法在Activity里，因为你可以合并一个fragment dialog 到activity管理的Fragment回退栈中，允许用户返回一个关掉的fragment.
+ >.ListFragment：
+     显示一个adapter管理的item列表，类似与ListActivity,它提供了一些方法管理listview,例如onListItemClick()回调方法。处理点击事件。
+
+#### Adding  a user interface
+
+  一个fragment 通常用于作为activity用户界面的一部分，并且提供自己的布局给activity.
+
+为了提供一个布局给fragment,你必须实现onCreateView（）回调方法，当fragment绘制它的布局的时候android系统会调用它。你实现这个方法必须返回一个view ，就是你的fragment布局的根。
+For example：
+>.  public static class ExampleFragment extends Fragment {
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        return inflater.inflate(R.layout.example_fragment, container, false);
+    }
+
+container 参数是父viewgroup,就是你的fragment将要被插入的viewgroup.saveInstanceState 参数是这个fragment里前面实例提供数据的Bundle.
+
+inflate()方法有三个参数:
+>. 1 你想要填充的资源文件的ID
+
+>. 2 填充布局文件的父viewgroup
+
+>.3 一布尔变量表明填充的布局是否应该被attached到ViewGroup(第二个参数)，
