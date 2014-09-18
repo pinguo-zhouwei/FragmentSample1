@@ -1,4 +1,4 @@
-Fragment
+Fragment(翻译文档)
 ===========
 
 Fragement 代表了用户接口的一部分或一个行为在一个Activity里面，在一个Activity里，你可以结合多个fragment来建立一个多面板UI，
