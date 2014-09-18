@@ -49,16 +49,17 @@ onCreate(),onStart(), onPause().and onStop()，事实上，如果你要改造一
  >.OnPause()
 系统调用这个方法表明用户将离开fragment(尽管经常不是指fragment要被销毁了），这就是你经常需要提交任何修改的地方。应该被保存在当前用户session之上。
 
-![alt text][id]
+![alt text][id1]
 
-[id]:app/iamge/fragment_lifecycle.png "Title"
+[id1]:app/iamge/fragment_lifecycle.png "Title"
 
 所有的生命周期回调方法在章节 Handing the Fragment Lifecycle 中详细讨论。
 
 这里有一些你想直接继承的子类，代替基类Fragment：
 >.DialogFragment：
       显示一个悬浮的对话框(dialog)，用这个类来创建一个dialog是一个非传统的创建dialog帮助方法在Activity里，因为你可以合并一个fragment dialog 到activity管理的Fragment回退栈中，允许用户返回一个关掉的fragment.
- >.ListFragment：
+
+>.ListFragment：
      显示一个adapter管理的item列表，类似与ListActivity,它提供了一些方法管理listview,例如onListItemClick()回调方法。处理点击事件。
 
 #### Adding  a user interface
@@ -68,11 +69,16 @@ onCreate(),onStart(), onPause().and onStop()，事实上，如果你要改造一
 为了提供一个布局给fragment,你必须实现onCreateView（）回调方法，当fragment绘制它的布局的时候android系统会调用它。你实现这个方法必须返回一个view ，就是你的fragment布局的根。
 For example：
 >.  public static class ExampleFragment extends Fragment {
+
     @Override
+
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
+
         return inflater.inflate(R.layout.example_fragment, container, false);
+
     }
 
 container 参数是父viewgroup,就是你的fragment将要被插入的viewgroup.saveInstanceState 参数是这个fragment里前面实例提供数据的Bundle.
