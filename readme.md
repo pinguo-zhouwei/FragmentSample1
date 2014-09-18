@@ -89,3 +89,47 @@ inflate()方法有三个参数:
 >. 2 填充布局文件的父viewgroup
 
 >.3 一布尔变量表明填充的布局是否应该被attached到ViewGroup(第二个参数)，
+
+
+文档翻译日期:2014.9.18
+===
+
+###Or, programmatically add the fragment to an existing ViewGroup.(或者程序代码中添加fragment到已存在的ViewGroup)
+
+在你activity运行的任何时间，你都可以添加fragments到你的activity布局。你需要简单的指定一个ViewGroup来放你的fragment.
+
+要在activity中使用fragment事务（如:add(添加)，remove（移除），replace（替换）一个fragment）,你必须使用来自FragmentTransaction的API,你可以在Activity中得到一个FragmentTransaction实例，像这样:
+
+>.FragmentManager fragmentManager = getFragmentManager()
+
+>. FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+
+然后你就可以用add（）方法来添加一个fragment了，指定fragment的添加，并且插入到这个view.例如:
+
+>.ExampleFragment  fragment = new ExampleFragment();
+ >.fragmentTransaction.add(R.id.fragment_container, fragment);
+ >.fragmentTransaction.commit();
+
+add（）方法的第一个参数是这个fragment会放在哪的ViewGroup,通过resource Id指定。第二个参数就是要添加的fragment。
+ 一旦你使FragmentTransaction发生了变化，你必须调用commit（）方法来使这些变化产生影响。
+
+####Adding a fragment without a UI
+
+上面的例子展示了怎样添加一个fragment到你的Activity并提供一个UI，然而，你也可以用fragment为你的Activity提供一个后台行为而没有前端UI
+
+要添加一个没有UI的fragment,从Activity添加fragment用add(Fragment,String)(为fragment提供一个唯一的字符串”tag”,而不是一个view ID). 但是，通过这种方法添加一个fragment，由于它没有结合一个view在Activity的布局里，所以它不会收到onCreateView（）回调。因此你不需要实现那个方法。
+
+提供一个字符串给fragment，并不是严格地为了没有UI的fragment,你也可以为一个有UI的fragment提供字符串 tag, 但是，如果你的fragment没有UI，字符串标签就是是唯一识别它的方法了。如果你想后面 在Activity中得到这个Fragment,你需要以用 FindFragmentByTag().
+
+####Managing Fragments（管理Fragments）
+
+为了在你的Activity里管理Fragments,你需要使用FragmentManager,要得到FragmentManager,在你的Activity里调用getFragemntManager().
+
+你可以用FragmentManager做下面一些事情:
+>. 1 得到在Activity里存在的fragments,用findFragmentById()(用于 为Activity提供UI布局的fragment),findFragmentByTag（）（用于没有提供UI的fragment）.
+
+>. 2 将fragment pop到回退栈，用popBackStack()
+
+>. 3 为回退栈的变化注册一个监听器，用 addOnBackStackChangeListener().
+
+ 正如前面章节所述，你可以用FragmentManager 打开一个FragmentTransaction,它允许你操作事务，如添加和移除fragment.
