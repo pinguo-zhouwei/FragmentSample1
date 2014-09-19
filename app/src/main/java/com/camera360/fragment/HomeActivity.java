@@ -11,6 +11,8 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.camera360.fragment.day2.SimpleActivity;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,6 +47,10 @@ public class HomeActivity extends Activity {
                         intent = new Intent(HomeActivity.this, CommunicationActivity.class);
                         startActivity(intent);
                         break;
+                    case 3:
+                        intent = new Intent(HomeActivity.this, SimpleActivity.class);
+                        startActivity(intent);
+                        break;
                 }
             }
         });
@@ -61,6 +67,7 @@ public class HomeActivity extends Activity {
             list.add("xml布局文件中使用fragment");
             list.add("代码添加fragment");
             list.add("fragment与activity交互");
+            list.add("fragment与Activity交互2");
         }
 
         @Override
