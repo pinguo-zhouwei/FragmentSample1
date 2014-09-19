@@ -248,6 +248,7 @@ transaction.commit();
 
 你也可以在fragment布局里注册一个view来提供一个上下文菜单通过调用registerForContextMenu(),当用户打开上下文菜单，fragment将会收到一个调用onCreateContextMenu().当用户选择一个item，fragment收到一个调用 onContextItemSelected(),
 
+#### 2014.9.19
 
 #### Handing the Fragment Lifecycle(处理fragment的生命周期)
 
