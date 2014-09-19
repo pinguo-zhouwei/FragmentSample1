@@ -296,3 +296,7 @@ Fragment的整个生命周期流，被它宿主的Activity所影响，
 ![alt text][id2]
 
 [id2]:app/iamge/activity_fragment_lifecycle.png "Title"
+
+#### Example(示例)
+
+为了带来本文档所一起讨论的，这儿有一个Activity用两个fragment来创建一个two-pane（两个面板）的布局的示例，Activity包含一个显示莎士比亚剧本目录列表的Fragment和另一个显示剧本摘要当点击list时，它也展示了如何提供不同的fragment配置，基于屏幕的配置。
