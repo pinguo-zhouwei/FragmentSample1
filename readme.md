@@ -247,3 +247,51 @@ transaction.commit();
 任何你从fragment添加到Options Menu的item将会被追加到已经存在的菜单项后面，当一个菜单项被点击后，fragment会收到回调到OnOptionsItemSelected().
 
 你也可以在fragment布局里注册一个view来提供一个上下文菜单通过调用registerForContextMenu(),当用户打开上下文菜单，fragment将会收到一个调用onCreateContextMenu().当用户选择一个item，fragment收到一个调用 onContextItemSelected(),
+
+
+#### Handing the Fragment Lifecycle(处理fragment的生命周期)
+
+管理fragment的生命周期类似于管理activity的生命周期，和Activity一样，fragment存在的三个状态:
+
+>* Resumed
+>       在运行的activity中，fragment处于可见状态
+> + Paused
+>     另一个Activity出现在屏幕上，并且获得了焦点。但是fragment宿主的activity仍然是可见的(屏幕上的activitty是透明的或是没有覆盖完全屏)。
+> + Stopped
+>  Fragment不可见，宿主的Activity也Stopped了,或者Fragment已经从Actvity里移除，但是加入到了回退找中。一个处于stopped状态的Fragment仍然活着（所有的状态和变量被系统保存着）。但是，对于用户来说它是不可见的，并且当Activity被killed掉的时候，它也会被killed掉。
+
+像Activity一样，你可以用Bundle来保存一个fragment的状态，在Activity的进程在被Killed掉的情况下，当Activity recreate（重新创建）的时候，你需要重新保存fragment的状态。你可以在Fragment onSaveInstanceState() 方法回调的时候保存状态，也可以在 onCreate() ,onCreateView（），onActivityCreated（）的时候重新存储状态。了解更多的关于 存储状态的信息，请看Activities的文档。
+
+一个 Activity和一个Fragment之间最重要的区别就是Fragment保存在各自的回退栈中。当一个activity stopped的时候，它被放到了一个被系统管理的Activity回退栈中，但是，默认情况下，一个Fragment被放到一个被宿主Activity管理的回退栈中，仅仅当你明确的请求调用addToBackStack()来保存，当一个事务移除这个fragment的时候。
+
+另外,管理fragment的方法与管理Activity的方法非常相似，因此，管理Activity生命周期的相同特征同样也可以用于Fragments.你也需要理解的是。Activity的生命是怎么影响 Fragments 的生命的。
+
+> 警告：在你的Fragment中如果你需要一个Context对象，你可以调用getActivity(),但是，谨慎调用getActivity（）仅当你的Fragment已经Attached到Activity,当你的fragment没有Attached到Activity或者在它生命周期结束的时候detached，getActivity（）将会返回null.
+
+##### Coordinating with the activity lifecycle(与Activity的生命周期相配合)
+
+Fragment宿主的Activity的生命周期直接影响到fragment的生命周期，每一个Activity生命周期方法的回调导致Fragment中相似生命周期的方法回调。例如，当Activity收到onPause().Activity里面的每一个Fragment都会收到onPause().
+
+但是，Fragment有另外一些生命周期方法，他们处理唯一的与Activity交互，为了执行一些动作如build（创建）和destoryed(销毁)fragment的UI。这些增加的回调方法是:
+
+>* onAttach()
+>  当Fragment与Activity发生来联系的时候调用。
+>* onCreateView（）
+> 创建与Fragment结合的View层次结构时调用
+> * onActivityCreated()
+> 当Activity的oncreate（）方法返回时调用。
+> * onDestroyView（）
+> 当与Fragment结合的View被移除的时候调用。
+> * onDettach()
+>  当Activity与fragment断开联系的时候调用。
+
+Fragment的整个生命周期流，被它宿主的Activity所影响，
+通过下面的图解表明，在这个图解中，你可以看见Activity里的每一个成功的状态决定着Fragment中哪些回调会被收到。例如，当一个Activity收到它的Activity回调，这个Activity里的Fragment不止会收到onActivityCreate()回调。
+
+一旦Activity到达Resumed状态，你可以自由地添加或移除Fragment到Activity,因此，只有Activity在Resumed状态，Fragment的生命周期才能独立变化。
+
+然而，当activity离开resumed状态，fragment再次被Activity推如自己的生命周期。
+
+![alt text][id2]
+
+[id2]:app/iamge/activity_fragment_lifecycle.png "Title"
