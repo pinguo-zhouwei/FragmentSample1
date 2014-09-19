@@ -41,6 +41,10 @@ public class HomeActivity extends Activity {
                         intent = new Intent(HomeActivity.this, SecondActivity.class);
                         startActivity(intent);
                         break;
+                    case 2:
+                        intent = new Intent(HomeActivity.this, CommunicationActivity.class);
+                        startActivity(intent);
+                        break;
                 }
             }
         });
@@ -56,7 +60,7 @@ public class HomeActivity extends Activity {
         public void loadData() {
             list.add("xml布局文件中使用fragment");
             list.add("代码添加fragment");
-
+            list.add("fragment与activity交互");
         }
 
         @Override
