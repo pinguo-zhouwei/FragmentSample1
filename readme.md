@@ -290,7 +290,7 @@ Fragment的整个生命周期流，被它宿主的Activity所影响，
 
 一旦Activity到达Resumed状态，你可以自由地添加或移除Fragment到Activity,因此，只有Activity在Resumed状态，Fragment的生命周期才能独立变化。
 
-然而，当activity离开resumed状态，fragment再次被Activity推如自己的生命周期。
+然而，当activity离开resumed状态，fragment再次被Activity推入自己的生命周期。
 
 ![alt text][id2]
 
