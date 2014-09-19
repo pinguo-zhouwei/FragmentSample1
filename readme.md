@@ -300,3 +300,210 @@ Fragment的整个生命周期流，被它宿主的Activity所影响，
 #### Example(示例)
 
 为了带来本文档所一起讨论的，这儿有一个Activity用两个fragment来创建一个two-pane（两个面板）的布局的示例，Activity包含一个显示莎士比亚剧本目录列表的Fragment和另一个显示剧本摘要当点击list时，它也展示了如何提供不同的fragment配置，基于屏幕的配置。
+
+
+
+#### Example(示例)
+
+为了带来本文档所一起讨论的，这儿有一个Activity用两个fragment来创建一个two-pane（两个面板）的布局的示例，Activity包含一个显示莎士比亚剧本目录列表的Fragment和另一个显示剧本摘要当点击list时，它也展示了如何提供不同的fragment配置，基于屏幕的配置。
+
+> 提醒: 这个Activity的全部可用代码在FragmentLayout.java里面
+
+主Activity像平常一样提供了一个布局，在onCreate（）时:
+
+> @Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.fragment_layout);
+}
+
+被应用的布局是fragment_layout.xml：
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+>    android:orientation="horizontal"
+   android:layout_width="match_parent" android:layout_height="match_parent">
+
+    <fragment class="com.example.android.apis.app.FragmentLayout$TitlesFragment"
+            android:id="@+id/titles" android:layout_weight="1"
+            android:layout_width="0px" android:layout_height="match_parent" />
+
+    <FrameLayout android:id="@+id/details" android:layout_weight="1"
+            android:layout_width="0px" android:layout_height="match_parent"
+            android:background="?android:attr/detailsElementBackground" />
+
+</LinearLayout>
+
+这个布局文件指包含TitileFragment,也就是说，当设备是竖屏的时候,仅仅只有剧本的名字列表可见，因此，在这种配置下，当用户点击一个item的时候用户将会开启一个新的Activity来显示摘要，而不是加载第二个Activity.
+
+然后，你可以看见在Fragment类里面是怎么完成的，首先是TitlesFragment,它显示了莎士比亚剧本目录列表，这个fragment继承于ListFragment,并且依赖它处理更多的listview的工作。
+
+当你检查这段代码的时候，注意当用用户点击列表Item的时候，这儿可能有两种行为:取决与在布局在活动，它可以在一个Activity里创建和显示一个新的fragment来显示详细信息。或者开启一个新的activity.
+
+public static class TitlesFragment extends ListFragment {
+    boolean mDualPane;
+    int mCurCheckPosition = 0;
+
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
+        // Populate list with our static array of titles.
+        setListAdapter(new ArrayAdapter<String>(getActivity(),
+                android.R.layout.simple_list_item_activated_1, Shakespeare.TITLES));
+
+        // Check to see if we have a frame in which to embed the details
+        // fragment directly in the containing UI.
+        View detailsFrame = getActivity().findViewById(R.id.details);
+        mDualPane = detailsFrame != null && detailsFrame.getVisibility() == View.VISIBLE;
+
+        if (savedInstanceState != null) {
+            // Restore last state for checked position.
+            mCurCheckPosition = savedInstanceState.getInt("curChoice", 0);
+        }
+
+        if (mDualPane) {
+            // In dual-pane mode, the list view highlights the selected item.
+            getListView().setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+            // Make sure our UI is in the correct state.
+            showDetails(mCurCheckPosition);
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putInt("curChoice", mCurCheckPosition);
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        showDetails(position);
+    }
+
+    /**
+     * Helper function to show the details of a selected item, either by
+     * displaying a fragment in-place in the current UI, or starting a
+     * whole new activity in which it is displayed.
+     */
+    void showDetails(int index) {
+        mCurCheckPosition = index;
+
+        if (mDualPane) {
+            // We can display everything in-place with fragments, so update
+            // the list to highlight the selected item and show the data.
+            getListView().setItemChecked(index, true);
+
+            // Check what fragment is currently shown, replace if needed.
+            DetailsFragment details = (DetailsFragment)
+                    getFragmentManager().findFragmentById(R.id.details);
+            if (details == null || details.getShownIndex() != index) {
+                // Make new fragment to show this selection.
+                details = DetailsFragment.newInstance(index);
+
+                // Execute a transaction, replacing any existing fragment
+                // with this one inside the frame.
+                FragmentTransaction ft = getFragmentManager().beginTransaction();
+                if (index == 0) {
+                    ft.replace(R.id.details, details);
+                } else {
+                    ft.replace(R.id.a_item, details);
+                }
+                ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                ft.commit();
+            }
+
+        } else {
+            // Otherwise we need to launch a new activity to display
+            // the dialog fragment with selected text.
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), DetailsActivity.class);
+            intent.putExtra("index", index);
+            startActivity(intent);
+        }
+    }
+}
+
+第二个Fragment，显示从TitleFragment选择的item显示对应剧本的摘要。
+
+public static class DetailsFragment extends Fragment {
+    /**
+     * Create a new instance of DetailsFragment, initialized to
+     * show the text at 'index'.
+     */
+    public static DetailsFragment newInstance(int index) {
+        DetailsFragment f = new DetailsFragment();
+
+        // Supply index input as an argument.
+        Bundle args = new Bundle();
+        args.putInt("index", index);
+        f.setArguments(args);
+
+        return f;
+    }
+
+    public int getShownIndex() {
+        return getArguments().getInt("index", 0);
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+            Bundle savedInstanceState) {
+        if (container == null) {
+            // We have different layouts, and in one of them this
+            // fragment's containing frame doesn't exist.  The fragment
+            // may still be created from its saved state, but there is
+            // no reason to try to create its view hierarchy because it
+            // won't be displayed.  Note this is not needed -- we could
+            // just run the code below, where we would create and return
+            // the view hierarchy; it would just never be used.
+            return null;
+        }
+
+        ScrollView scroller = new ScrollView(getActivity());
+        TextView text = new TextView(getActivity());
+        int padding = (int)TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
+                4, getActivity().getResources().getDisplayMetrics());
+        text.setPadding(padding, padding, padding, padding);
+        scroller.addView(text);
+        text.setText(Shakespeare.DIALOGUE[getShownIndex()]);
+        return scroller;
+    }
+}
+
+从TitleFragment 调用，如果用户点击列表项，并且当前的布局不包括R.id.details 这个view,然后应用将会开启DetailActivity 来显示item的内容。
+
+这儿是 DetailActivity,它简单的嵌入了DetailsFragment来显示选中的剧本的摘要内容，当屏幕是竖屏的时候。
+
+public static class DetailsActivity extends Activity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        if (getResources().getConfiguration().orientation
+                == Configuration.ORIENTATION_LANDSCAPE) {
+            // If the screen is now in landscape mode, we can show the
+            // dialog in-line with the list so we don't need this activity.
+            finish();
+            return;
+        }
+
+        if (savedInstanceState == null) {
+            // During initial setup, plug in the details fragment.
+            DetailsFragment details = new DetailsFragment();
+            details.setArguments(getIntent().getExtras());
+            getFragmentManager().beginTransaction().add(android.R.id.content, details).commit();
+        }
+    }
+}
+
+注意这个Activity finish掉了自己当配置横屏的时候，以至于主Activity可以接收和显示DetailsFragment在 TitleFragment的旁边。这个可以发生在用户以竖屏的方式开启DetailsActivity，然后转换为横屏时。
+
+想要更多的Fragment使用的示例，请看App 示例 APIs Demos，在ApisDemos里.
+
+
+###完
+
+
+
+
+
