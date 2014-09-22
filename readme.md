@@ -498,6 +498,27 @@ public static class DetailsActivity extends Activity {
 
 ###完
 
+### 2014.9.22
+### Fragment 高级应用
+
+#### FragmentPagerAdapter
+
+实现了PagerAdapter,演示的每一个页面作为一个Fragment,只要用户可以返回到这个页面,它就会持久的保存到Fragment Manager里。
+
+这个版本的pager最好用于这儿有少量的特别的静态Fragment需要翻页。例如一个选项卡集合（Tabs），用户浏览的每一个Fragment page 都将会被保存到内存中去。尽管它的view 层次结构可能被销毁了当不可见的时候。这可能导致使用大量地重要的内存。从fragment 实例可以获取许多状态中的任意一个之后。对于更大的页面集合，考虑使用FragmentStatePagerAdapter.
+
+当主viewPager使用FragmentPagerAdapter的时候，必须有一个可以的ID集
+
+子类仅需实现getItem(int )和getCount（）来得到一个工作的 adapter.
+
+这儿有一个例子实现了pager里包含系列Fragments.
+
+
+
+
+
+
+
 
 
 
