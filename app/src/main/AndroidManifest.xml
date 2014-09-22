@@ -22,6 +22,7 @@
         <activity android:name=".CommunicationActivity" />
         <activity android:name="com.camera360.fragment.day2.SimpleActivity" />
         <activity android:name="com.camera360.fragment.day2.DetailsActivity" />
+        <activity android:name="com.camera360.fragment.day3.FragmentPagerSupport" />
     </application>
 
 </manifest>

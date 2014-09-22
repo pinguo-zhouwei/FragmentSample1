@@ -12,6 +12,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.camera360.fragment.day2.SimpleActivity;
+import com.camera360.fragment.day3.FragmentPagerSupport;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,10 @@ public class HomeActivity extends Activity {
                         intent = new Intent(HomeActivity.this, SimpleActivity.class);
                         startActivity(intent);
                         break;
+                    case 4:
+                        intent = new Intent(HomeActivity.this, FragmentPagerSupport.class);
+                        startActivity(intent);
+                        break;
                 }
             }
         });
@@ -68,6 +73,7 @@ public class HomeActivity extends Activity {
             list.add("代码添加fragment");
             list.add("fragment与activity交互");
             list.add("fragment与Activity交互2");
+            list.add("fragment+viewpager示例");
         }
 
         @Override

@@ -4,5 +4,6 @@
     <string name="app_name">FragmentSample1</string>
     <string name="hello_world">fragment test!</string>
     <string name="action_settings">Settings</string>
-
+    <string name="first">第一个</string>
+    <string name="last">最后一个</string>
 </resources>
