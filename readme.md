@@ -513,6 +513,17 @@ public static class DetailsActivity extends Activity {
 
 这儿有一个例子实现了pager里包含系列Fragments.
 
+#### FragmentStatePagerAdapter
+
+实现了PagerAdapter，用一个Fragment来管理每一个page(页面),这个类也处理保存和重新存储Fragment的状态。
+
+这个版本的pager对于这儿有大量的页面(page)时非常有用，工作时很像一个ListView，它们的全部的fragment都有可能被销毁，仅仅保留那些fragment被保存的状态。在页面之间切换的时候，相比与FragmentPagerAdapter更加平常的潜在花费。FragmentStatePagerAdapter允许pager持有更少的内存给相关连的每个浏览页面。
+
+当使用FragmentStatePagerAdapter时，宿主viewPager必须有一个可用的ID集
+
+子类仅需实现getItem(int )和getCount（）来得到一个工作的 adapter.
+
+这儿有一个例子实现了pager里包含系列Fragments.
 
 
 
