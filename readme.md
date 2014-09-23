@@ -526,6 +526,181 @@ public static class DetailsActivity extends Activity {
 这儿有一个例子实现了pager里包含系列Fragments.
 
 
+### Fragment源码学习文档
+####Fragment实现添加、替换、移除操作的流程
+
+ 在Activity中，要操作Fragment，必须拿到一个Fragment的管理器FragmentManager,在Activity中，可以通过getFragmentManager()或者getSupportFragmentManager（）来得到一个FragmentManager的实例。我们得到的实际上是一个FragmentManager的子类实例FragmentManagerImpl.
+ 关键代码:
+  final FragmentManagerImpl mFragments = new FragmentManagerImpl();
+   /**
+     * Return the FragmentManager for interacting with fragments associated
+     * with this activity.
+     */
+    public FragmentManager getSupportFragmentManager() {
+        return mFragments;
+    }
+
+通过上面的方法就可以得到一个FragmentManager,然后我们就可以得到开启一个事务,通过beginTransaction（）方法就可以得到一个FragmentTransaction实例，
+   关键代码:
+        @Override
+    public FragmentTransaction beginTransaction() {
+        return new BackStackRecord(this);
+    }
+
+  而返回的是一个继承FragmentTransaction的子类实例BackStackRecord,
+   BackStackRecord实现了FragmentManager.BackStackEntry和Runnable，重写了run方法。BackStackRecord里面有一个重要的类Op，Op就是记录每一个操作，如add(),remove(),replace().
+  关键代码:
+   static final class Op {
+        Op next;
+        Op prev;
+        int cmd;
+        Fragment fragment;
+        int enterAnim;
+        int exitAnim;
+        int popEnterAnim;
+        int popExitAnim;
+        ArrayList<Fragment> removed;
+    }
+
+   Op相当于一个双向链表，它记录了它前面的操作和后面的操作，还有自身的一些数据，
+  BackStackRecord 还有一些其他属性:
+    Op mHead;//记录操作的链表
+    Op mTail;
+    //操作命令
+    static final int OP_NULL = 0;
+    static final int OP_ADD = 1;
+    static final int OP_REPLACE = 2;
+    static final int OP_REMOVE = 3;
+    static final int OP_HIDE = 4;
+    static final int OP_SHOW = 5;
+    static final int OP_DETACH = 6;
+    static final int OP_ATTACH = 7;
+   //动画
+    int mEnterAnim;
+    int mExitAnim;
+    int mPopEnterAnim;
+    int mPopExitAnim;
+    int mTransition;
+    int mTransitionStyle;
+
+   boolean mAddToBackStack;//是否加入回退栈
+   boolean mAllowAddToBackStack = true;
+
+ 弄清了BackStackRecord的结构之后，来看看它是怎么执行具体操作的，这里有两个重要的方法，addOp()和doAddOp()：
+  关键代码:
+    void addOp(Op op) {
+        if (mHead == null) {
+            mHead = mTail = op;
+        } else {
+            op.prev = mTail;
+            mTail.next = op;
+            mTail = op;
+        }
+        op.enterAnim = mEnterAnim;
+        op.exitAnim = mExitAnim;
+        op.popEnterAnim = mPopEnterAnim;
+        op.popExitAnim = mPopExitAnim;
+        mNumOp++;
+    }
+    这就是添加一个操作的核心代码。还有一个doAddOp（）:
+
+    private void doAddOp(int containerViewId, Fragment fragment, String tag, int opcmd) {
+        fragment.mFragmentManager = mManager;
+
+        if (tag != null) {
+            if (fragment.mTag != null && !tag.equals(fragment.mTag)) {
+                throw new IllegalStateException("Can't change tag of fragment "
+                        + fragment + ": was " + fragment.mTag
+                        + " now " + tag);
+            }
+            fragment.mTag = tag;
+        }
+
+        if (containerViewId != 0) {
+            if (fragment.mFragmentId != 0 && fragment.mFragmentId != containerViewId) {
+                throw new IllegalStateException("Can't change container ID of fragment "
+                        + fragment + ": was " + fragment.mFragmentId
+                        + " now " + containerViewId);
+            }
+            fragment.mContainerId = fragment.mFragmentId = containerViewId;
+        }
+
+        Op op = new Op();
+        op.cmd = opcmd;
+        op.fragment = fragment;
+        addOp(op);
+    }
+这些所有的操作其实都是调用这两个方法来完成，例如:
+ 添加操作:
+>    public FragmentTransaction add(int containerViewId, Fragment fragment, String tag) {
+        doAddOp(containerViewId, fragment, tag, OP_ADD);
+        return this;
+    }
+
+   替换操作replace：
+   > public FragmentTransaction replace(int containerViewId, Fragment fragment, String tag) {
+        if (containerViewId == 0) {
+            throw new IllegalArgumentException("Must use non-zero containerViewId");
+        }
+        doAddOp(containerViewId, fragment, tag, OP_REPLACE);
+        return this;
+    }
+
+最后是提交，调用commit（）方法提交
+ 关键代码；
+  public int commit() {
+        return commitInternal(false);
+    }
+
+    public int commitAllowingStateLoss() {
+        return commitInternal(true);
+    }
+
+    int commitInternal(boolean allowStateLoss) {
+        if (mCommitted) throw new IllegalStateException("commit already called");
+        if (FragmentManagerImpl.DEBUG) {
+            Log.v(TAG, "Commit: " + this);
+            LogWriter logw = new LogWriter(TAG);
+            PrintWriter pw = new PrintWriter(logw);
+            dump("  ", null, pw, null);
+        }
+        mCommitted = true;
+        if (mAddToBackStack) {
+            mIndex = mManager.allocBackStackIndex(this);
+        } else {
+            mIndex = -1;
+        }
+        mManager.enqueueAction(this, allowStateLoss);
+        return mIndex;
+    }
+
+  有两种提交方式，不允许丢失的用commit（）提交，允许丢失的用commitAllowingStateLoss（）提交。提交之后会把事务放入FragmentManager的执行队列中去执行。任务队列中有把Runnbale添加到一个List里面.然后调用Handler执行
+
+关键代码：
+           mPendingActions.add(action);
+            if (mPendingActions.size() == 1) {
+                mActivity.mHandler.removeCallbacks(mExecCommit);
+                mActivity.mHandler.post(mExecCommit);
+            }
+
+ Runnable mExecCommit = new Runnable() {
+        @Override
+        public void run() {
+            execPendingActions();
+        }
+    };
+
+然后在 execPendingActions();方法里面遍历Runnable List，执行他们的run（）方法，就是BackStackRecord里面的run（）方法，最终区执行添加的任务。
+关键代码:
+   for (int i=0; i<numActions; i++) {
+                mTmpActions[i].run();//执行run方法
+                mTmpActions[i] = null;
+            }
+
+ BackStackRecord的run（）方法里实现了真正的添加、移除、替换等这些操作，他是遍历mHead这个双向链表来完成的。
+
+以上就是Fragment的add,remove,replace等操作的实现流程。
+
 
 
 
