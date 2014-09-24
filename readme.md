@@ -730,6 +730,7 @@ public static class DetailsActivity extends Activity {
 首先，Activity里面有一个返回键的监听，监听到用户按下返回键时，会调用一个onBackPressed()方法，
 
 #### 关键代码:
+>
  /**
      * Take care of calling onBackPressed() for pre-Eclair platforms.
      */
@@ -746,7 +747,7 @@ public static class DetailsActivity extends Activity {
 
         return super.onKeyDown(keyCode, event);
     }
-
+>
 /**
      * Take care of popping the fragment back stack or finishing the activity
      * as appropriate.
@@ -761,7 +762,7 @@ public static class DetailsActivity extends Activity {
 
 ##### 关键代码:
 
-final BackStackRecord bss = mBackStack.remove(last);
+> final BackStackRecord bss = mBackStack.remove(last);
             bss.popFromBackStack(true);
 
 
@@ -769,7 +770,8 @@ final BackStackRecord bss = mBackStack.remove(last);
 
 ##### 关键代码:
 
-public void popFromBackStack(boolean doStateMove) {
+
+> public void popFromBackStack(boolean doStateMove) {
         if (FragmentManagerImpl.DEBUG) {
             Log.v(TAG, "popFromBackStack: " + this);
             LogWriter logw = new LogWriter(TAG);
