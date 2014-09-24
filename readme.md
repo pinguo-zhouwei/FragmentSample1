@@ -721,3 +721,131 @@ public static class DetailsActivity extends Activity {
 以上就是Fragment的add,remove,replace等操作的实现流程。
 
 
+### 2014.9.24
+
+#### Back Stack
+
+我们在使用Fragment的时候，如果在提交了一个 Fragment Transaction 之前调用了addToBackStack(null),就会把当前的Transaction放入回退栈，当用户按下手机上的返回键的时候，就可以回到以前的一个状态。接下来看一下实现的源码:
+
+首先，Activity里面有一个返回键的监听，监听到用户按下返回键时，会调用一个onBackPressed()方法，
+
+#### 关键代码:
+ /**
+     * Take care of calling onBackPressed() for pre-Eclair platforms.
+     */
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (android.os.Build.VERSION.SDK_INT < 5 /* ECLAIR */
+                && keyCode == KeyEvent.KEYCODE_BACK
+                && event.getRepeatCount() == 0) {
+            // Take care of calling this method on earlier versions of
+            // the platform where it doesn't exist.
+            onBackPressed();
+            return true;
+        }
+
+        return super.onKeyDown(keyCode, event);
+    }
+
+/**
+     * Take care of popping the fragment back stack or finishing the activity
+     * as appropriate.
+     */
+    public void onBackPressed() {
+        if (!mFragments.popBackStackImmediate()) {
+            finish();
+        }
+}
+
+如果返回 false ，直接finish掉当前的Activity,然后会执行popBackStackState(mActivity.mHandler, null, -1, 0);方法，在这个方法里回调用popFromBackStack（true）;
+
+##### 关键代码:
+
+final BackStackRecord bss = mBackStack.remove(last);
+            bss.popFromBackStack(true);
+
+
+在popFromBackStack（）方法里，会循环记录操作的链表，拿出每一个操作的类型，然后做相反的操作，如：如果是add,现在就做Remove操作，如果是show,现在就做hide操作，如果是Replace，先remove当前的Fragment，然后依次拿出Op里removed List里面的所有Fragment，依次做添加操作。
+
+##### 关键代码:
+
+public void popFromBackStack(boolean doStateMove) {
+        if (FragmentManagerImpl.DEBUG) {
+            Log.v(TAG, "popFromBackStack: " + this);
+            LogWriter logw = new LogWriter(TAG);
+            PrintWriter pw = new PrintWriter(logw);
+            dump("  ", null, pw, null);
+        }
+
+        bumpBackStackNesting(-1);
+
+        Op op = mTail;
+        while (op != null) {
+            switch (op.cmd) {
+                case OP_ADD: {
+                    Fragment f = op.fragment;
+                    f.mNextAnim = op.popExitAnim;
+                    mManager.removeFragment(f,
+                            FragmentManagerImpl.reverseTransit(mTransition),
+                            mTransitionStyle);
+                } break;
+                case OP_REPLACE: {
+                    Fragment f = op.fragment;
+                    if (f != null) {
+                        f.mNextAnim = op.popExitAnim;
+                        mManager.removeFragment(f,
+                                FragmentManagerImpl.reverseTransit(mTransition),
+                                mTransitionStyle);
+                    }
+                    if (op.removed != null) {
+                        for (int i=0; i<op.removed.size(); i++) {
+                            Fragment old = op.removed.get(i);
+                            old.mNextAnim = op.popEnterAnim;
+                            mManager.addFragment(old, false);
+                        }
+                    }
+                } break;
+                case OP_REMOVE: {
+                    Fragment f = op.fragment;
+                    f.mNextAnim = op.popEnterAnim;
+                    mManager.addFragment(f, false);
+                } break;
+                case OP_HIDE: {
+                    Fragment f = op.fragment;
+                    f.mNextAnim = op.popEnterAnim;
+                    mManager.showFragment(f,
+                            FragmentManagerImpl.reverseTransit(mTransition), mTransitionStyle);
+                } break;
+                case OP_SHOW: {
+                    Fragment f = op.fragment;
+                    f.mNextAnim = op.popExitAnim;
+                    mManager.hideFragment(f,
+                            FragmentManagerImpl.reverseTransit(mTransition), mTransitionStyle);
+                } break;
+                case OP_DETACH: {
+                    Fragment f = op.fragment;
+                    f.mNextAnim = op.popEnterAnim;
+                    mManager.attachFragment(f,
+                            FragmentManagerImpl.reverseTransit(mTransition), mTransitionStyle);
+                } break;
+                case OP_ATTACH: {
+                    Fragment f = op.fragment;
+                    f.mNextAnim = op.popEnterAnim;
+                    mManager.detachFragment(f,
+                            FragmentManagerImpl.reverseTransit(mTransition), mTransitionStyle);
+                } break;
+                default: {
+                    throw new IllegalArgumentException("Unknown cmd: " + op.cmd);
+                }
+            }
+
+            op = op.prev;
+        }
+
+
+
+
+
+
+
+
